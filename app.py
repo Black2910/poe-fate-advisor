@@ -22,6 +22,7 @@ from typing import Any
 
 from fate_engine import Fate, FATE_NAMES, rank_fates
 from reward_catalog import classify_tooltip, icon_label, icon_legend, REWARD_ICONS
+from reward_variants import variants_for, get_variant, normalise_icon_id, match_tooltip, VARIANTS
 from selection_validation import position_label, verify_card_names, fail_closed_disagreement
 from image_regions import fate_image_regions, to_full_image_boxes
 from vision_sheet import create_visual_sheet
@@ -33,7 +34,7 @@ from overlay import FateOverlay, GREEN, YELLOW
 from card_marker import CardMarker, screen_card_rect
 from tray import TrayController
 
-APP_TITLE = "PoE Fate Advisor v1.3 | Toxic Rain Pathfinder"
+APP_TITLE = "PoE Fate Advisor v1.3.2 | Toxic Rain Pathfinder"
 CONFIG_FILE = Path.home() / ".poe_fate_advisor_config.json"
 PHASES = ("Kampagne", "Frühe Maps", "Rote Maps")
 GOALS = ("Ausgewogen", "Sicher", "Loot", "Viscera")
@@ -509,6 +510,8 @@ class AdvisorApp:
         self.update_status = tk.StringVar(value='Bereit')
         self.learn_card = tk.StringVar(value='1')
         self.learn_category = tk.StringVar(value='')
+        self.learn_variant = tk.StringVar(value='Nicht festgelegt (nur Icon-Kategorie)')
+        self.learn_tooltip = tk.StringVar(value='')
         self.learn_status = tk.StringVar(value='Erst einen Screenshot laden oder aufnehmen.')
         self.last_icon_crops = []
         self._db = IconDatabase()
@@ -664,7 +667,7 @@ class AdvisorApp:
 
     # ---------- User-confirmed reward-icon library ----------
     def _build_learning_tab(self, parent):
-        ttk.Label(parent, text='F7 = kostenloser Screenshot direkt im Spiel. 45 bekannte Kategorien; Lernen nur nach Bestätigung.',
+        ttk.Label(parent, text='F7 = kostenloser Screenshot. Icon + separater Loot-Buff-Katalog; Lernen nur nach Bestätigung.',
                   style='Muted.TLabel', wraplength=760).pack(anchor='w', pady=(0,8))
         top = ttk.Frame(parent); top.pack(fill='x', pady=(0,8))
         ttk.Button(top, text='F7 · Screenshot GRATIS aufnehmen', command=self.capture_for_learning,
@@ -679,9 +682,24 @@ class AdvisorApp:
         self.learn_card_select.bind('<<ComboboxSelected>>', lambda e:self.show_training_crop())
         ttk.Label(pane,text='Belohnung (Icon-Kategorie):').pack(side='left',padx=(0,5))
         self.learn_cat_select=ttk.Combobox(pane,textvariable=self.learn_category,
-                                         values=[f'{k} – {v}' for k,v in sorted(REWARD_ICONS.items())],
+                                         values=[f'{"RareShields" if k == "Shield" else k} – {v}' for k,v in sorted(REWARD_ICONS.items())],
                                          state='readonly',width=43)
         self.learn_cat_select.pack(side='left',fill='x',expand=True)
+        self.learn_cat_select.bind('<<ComboboxSelected>>',lambda _e:self.update_variant_options())
+        ttk.Label(parent,text='Genaue Loot-Variante (optional; bei gleichem Icon nicht automatisch erkennbar):',
+                  style='Muted.TLabel').pack(anchor='w',pady=(3,2))
+        self.learn_variant_select=ttk.Combobox(parent,textvariable=self.learn_variant,
+                                              values=['Nicht festgelegt (nur Icon-Kategorie)'],
+                                              state='readonly',width=90)
+        self.learn_variant_select.pack(fill='x',pady=(0,5))
+        tooltip_line=ttk.Frame(parent);tooltip_line.pack(fill='x',pady=(0,8))
+        ttk.Label(tooltip_line,text='Loot-Tooltip (optional):').pack(side='left',padx=(0,6))
+        ttk.Entry(tooltip_line,textvariable=self.learn_tooltip,width=53).pack(side='left',fill='x',expand=True)
+        ttk.Button(tooltip_line,text='Variante aus Tooltip finden',command=self.suggest_variant_from_tooltip).pack(side='left',padx=(8,0))
+        self.learn_category.trace_add('write',lambda *_args:self.update_variant_options())
+        self.update_variant_options()
+        ttk.Label(parent,text='Nur Icon-Kategorie wird beim nächsten F8 automatisch erkannt. Varianten aus Tooltips sind getrennt gespeicherte Beobachtungen.',
+                  style='Muted.TLabel',wraplength=760).pack(anchor='w',pady=(0,5))
         previewrow = ttk.Frame(parent); previewrow.pack(fill='x')
         self.learn_preview=tk.Label(previewrow,text='Noch kein Icon',bg=SURFACE,fg=MUTED,
                                     width=16,height=7)
@@ -741,23 +759,57 @@ class AdvisorApp:
             self.learn_preview.configure(image='',text='Noch kein Icon',width=16,height=7)
             self.learn_preview.image=None
 
+    def update_variant_options(self):
+        if not hasattr(self,'learn_variant_select'):
+            return
+        category=normalise_icon_id(self.learn_category.get().split(' – ',1)[0])
+        options=['Nicht festgelegt (nur Icon-Kategorie)']
+        options += [f'{v.variant_id} – {v.label_de}' for v in variants_for(category)]
+        self.learn_variant_select.configure(values=options)
+        if self.learn_variant.get() not in options:
+            self.learn_variant.set(options[0])
+
+    def suggest_variant_from_tooltip(self):
+        category=normalise_icon_id(self.learn_category.get().split(' – ',1)[0])
+        match=match_tooltip(self.learn_tooltip.get(), category)
+        if match:
+            self.learn_variant.set(f'{match.variant_id} – {match.label_de}')
+            self.learn_status.set('Passende Variante gefunden – erst nach Prüfung bestätigen.')
+        else:
+            self.learn_status.set('Keine eindeutige Variante im Tooltip gefunden. Bitte manuell wählen oder nur das Icon lernen.')
+
     def confirm_training_icon(self):
         try:
             idx=int(self.learn_card.get())-1
             if idx<0 or idx>=len(self.last_icon_crops):
                 raise ValueError('Bitte zuerst einen Screenshot aufnehmen oder laden.')
-            category=self.learn_category.get().split(' – ',1)[0]
+            category=normalise_icon_id(self.learn_category.get().split(' – ',1)[0])
             if category not in REWARD_ICONS:
                 raise ValueError('Bitte eine bekannte Kategorie aus der Liste wählen.')
+            selected_variant=self.learn_variant.get().split(' – ',1)[0]
+            variant=get_variant(selected_variant)
+            if variant and variant.icon_id != category:
+                raise ValueError('Die Variante passt nicht zur gewählten Icon-Kategorie.')
+            if selected_variant != 'Nicht festgelegt (nur Icon-Kategorie)' and not variant:
+                raise ValueError('Bitte eine gültige Loot-Variante auswählen.')
+            summary=(f'Genauer Loot-Buff: {variant.label_de}\n' if variant else
+                     'Genaue Variante: unbekannt (wird nicht aus dem Icon abgeleitet)\n')
             if not messagebox.askyesno('Lernbeispiel bestätigen',
                   f'Stimmt das sichtbare Icon von Karte {idx+1} wirklich mit\n'
-                  f'{category}: {REWARD_ICONS[category]} überein?\n\n'
-                  'Nur bestätigen, wenn du die Bedeutung sicher kennst.'):
+                  f'{category}: {REWARD_ICONS[category]} überein?\n'
+                  +summary+'\nNur bestätigen, wenn du die Bedeutung sicher kennst.'):
                 return
             changed=self._db.add_sample(category,self.last_icon_crops[idx])
+            if variant:
+                self._db.record_variant(category, self.last_icon_crops[idx], variant.variant_id,
+                                        self.learn_tooltip.get())
             self.refresh_icon_catalog()
-            self.learn_status.set(('Bild gelernt: ' if changed else 'Dieses Bild ist bereits gespeichert: ')
-                                  +REWARD_ICONS[category]+'. Zukünftige F8-Scans nutzen das Beispiel.')
+            message=('Bild gelernt: ' if changed else 'Dieses Bild ist bereits gespeichert: ')+REWARD_ICONS[category]
+            if variant:
+                message+=f'. Loot-Variante als Beobachtung erfasst: {variant.label_de} (NICHT per Icon vorhersagbar).'
+            else:
+                message+='. Genaue Variante bleibt unbekannt.'
+            self.learn_status.set(message)
         except Exception as err:
             messagebox.showerror('Icon lernen',str(err))
 
@@ -801,7 +853,7 @@ class AdvisorApp:
             self.overlay.resume_after_capture()
 
     def delete_user_icons(self):
-        category=self.learn_category.get().split(' – ',1)[0]
+        category=normalise_icon_id(self.learn_category.get().split(' – ',1)[0])
         if category not in REWARD_ICONS:
             messagebox.showinfo('Kategorie wählen','Bitte zunächst die Kategorie auswählen, die du korrigieren möchtest.')
             return
