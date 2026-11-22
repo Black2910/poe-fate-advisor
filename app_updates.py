@@ -17,13 +17,13 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 import zipfile
 
-VERSION = '1.3.1'
+VERSION = '1.3.2'
 DEFAULT_GITHUB_REPO = 'Black2910/poe-fate-advisor'
 MAX_DOWNLOAD = 20 * 1024 * 1024
 MAX_UNPACKED = 45 * 1024 * 1024
 REPOSITORY_PATTERN = re.compile(r'^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$')
 APP_FILES = {'app.py','app_updates.py','updater_worker.py','icon_database.py',
-             'icon_reference.py','fate_engine.py','reward_catalog.py',
+             'icon_reference.py','fate_engine.py','reward_catalog.py','reward_variants.py',
              'icon_ranking.py','image_regions.py','vision_sheet.py',
              'selection_validation.py','card_marker.py','overlay.py',
              'tray.py','requirements.txt','start_windows.bat',
