@@ -38,7 +38,7 @@ REWARD_ICONS = {
     "Helmet": "seltener Helm",
     "BodyArmour": "seltene Körperrüstung",
     "Gloves": "seltene Handschuhe",
-    "Shield": "seltener Schild",
+    "Shield": "RareShields – seltene Schilde",
     "Quiver": "seltener Köcher",
     "RareWeapon": "Nahkampfwaffen/allgemeine Waffen",
     "Ring": "seltene Ringe",
