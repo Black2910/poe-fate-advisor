@@ -1,0 +1,33 @@
+name: Release ZIP
+on:
+  push:
+    tags: ['v*.*.*']
+permissions:
+  contents: write
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install testing dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb python3-tk
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Run tests before publishing
+        run: xvfb-run -a python -m unittest discover -s tests -v
+      - name: Build and validate release ZIP
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python scripts/build_release.py
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/PoE_Fate_Advisor_*.zip
+            dist/SHA256SUMS.txt

@@ -1,0 +1,27 @@
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.*
+# User data / private diagnostics
+*.log
+*.sqlite
+*.sqlite3
+*.db
+.poe_fate_advisor_config.json
+.poe_fate_advisor_data/
+.poe_fate_advisor_updates/
+*.key
+*.pem
+# Windows-generated files
+Thumbs.db
+Desktop.ini
+# Developer generated
+*.zip
+*.tmp
+
+# Generated GitHub release ZIP and checksums
+dist/
