@@ -1,7 +1,9 @@
 name: Release ZIP
 on:
   push:
+    branches: [main]
     tags: ['v*.*.*']
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -12,21 +14,48 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Determine release version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(python -c 'import json; print(json.load(open("version.json"))["version"])')"
+          TAG="v${VERSION}"
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "$TAG" ]]; then
+            echo "Tag and version.json do not match" >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+      - name: Check whether release already exists
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.version.outputs.tag }}" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Install testing dependencies
+        if: steps.existing.outputs.exists != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb python3-tk
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
       - name: Run tests before publishing
+        if: steps.existing.outputs.exists != 'true'
         run: xvfb-run -a python -m unittest discover -s tests -v
       - name: Build and validate release ZIP
+        if: steps.existing.outputs.exists != 'true'
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: python scripts/build_release.py
       - name: Publish release
+        if: steps.existing.outputs.exists != 'true'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           generate_release_notes: true
           files: |
             dist/PoE_Fate_Advisor_*.zip
