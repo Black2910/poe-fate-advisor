@@ -1,4 +1,4 @@
-# PoE Fate Advisor v1.3.1 – Lernende Icon-Bibliothek + einfacher Update-Manager
+# PoE Fate Advisor v1.3.2 – Loot-Buff-Varianten, RareShields und lernende Icon-Bibliothek
 
 Windows-Tool für **Path of Exile 1**, Liga 3.30, insbesondere den **Toxic Rain Pathfinder**. Alle Spielaktionen bleiben manuell: Der Advisor liest auf Tastendruck einen Screenshot, führt keine Spielklicks aus und greift nicht auf den PoE-Prozess zu.
 
@@ -27,6 +27,22 @@ Die Auswahl mit 2–3 angebotenen Fates ist optimiert. Die detaillierte Bossalta
 ## Neu: 45 Kategorien in einer lokalen SQLite-Datenbank
 
 Der Tab **„Loot-Icons lernen“** enthält die 45 Reward-Icon-Kategorien aus den PoEDB-Fates-Daten. Kategorie ist **nicht** gleich exakt garantierter Gegenstand: Dasselbe Icon kann verschiedene Varianten/Modifikatoren bezeichnen.
+
+**Neu in v1.3.2: Icon und Loot-Buff werden getrennt verwaltet.**
+
+Die Kategorie `Shield` wird im Lernmodus als **`Shield – RareShields – seltene Schilde`** angezeigt.
+Die Zusatzliste „Genaue Loot-Variante“ enthält die Fate-Belohnungen je Icon, etwa
+**RareArmour → Stärke / Geschicklichkeit / Intelligenz** und **Shield → Life / Defence / Resistance**.
+Wenn du die genaue Variante aus einem Tooltip kennst, kannst du sie auswählen oder den
+Tooltip eintragen und über **„Variante aus Tooltip finden“** bestimmen lassen.
+Es ist weiterhin erlaubt, nur die **Icon-Kategorie** zu lernen.
+
+**Sicherheitsgrenze:** Mehrere Varianten teilen sich dieselben Pixel. Deshalb wird die
+separat bestätigte Variante als Beobachtung gespeichert und auch beim Bibliothek-Backup
+mitgesichert. **F8 behauptet diese Variante NIE allein anhand eines Icons**. Für eine
+exakte Aussage muss der Tooltip sichtbar sein. Die Icon-Erkennung benötigt weiterhin
+keinen Tooltip und keine zusätzliche API-Abfrage. Aus alten Datenbanken wird automatisch
+migriert; bestätigte Icon-Proben bleiben erhalten.
 
 **So trainierst du ein neues Icon:**
 
