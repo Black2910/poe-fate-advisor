@@ -22,7 +22,7 @@ from typing import Any
 
 from fate_engine import Fate, FATE_NAMES, rank_fates
 from reward_catalog import classify_tooltip, icon_label, icon_legend, REWARD_ICONS
-from reward_variants import variants_for, get_variant, normalise_icon_id, match_tooltip, VARIANTS
+from reward_catalog import variants_for, get_variant, normalise_icon_id, match_tooltip, VARIANTS
 from selection_validation import position_label, verify_card_names, fail_closed_disagreement
 from image_regions import fate_image_regions, to_full_image_boxes
 from vision_sheet import create_visual_sheet
@@ -34,7 +34,7 @@ from overlay import FateOverlay, GREEN, YELLOW
 from card_marker import CardMarker, screen_card_rect
 from tray import TrayController
 
-APP_TITLE = "PoE Fate Advisor v1.3.2 | Toxic Rain Pathfinder"
+APP_TITLE = "PoE Fate Advisor v1.3.3 | Toxic Rain Pathfinder"
 CONFIG_FILE = Path.home() / ".poe_fate_advisor_config.json"
 PHASES = ("Kampagne", "Frühe Maps", "Rote Maps")
 GOALS = ("Ausgewogen", "Sicher", "Loot", "Viscera")
@@ -557,7 +557,7 @@ class AdvisorApp:
     def _build(self):
         container = ttk.Frame(self.root, padding=16)
         container.pack(fill="both", expand=True)
-        tk.Label(container, text="PoE Fate Advisor v1.3", font=("Segoe UI", 20, "bold"),
+        tk.Label(container, text="PoE Fate Advisor v"+VERSION, font=("Segoe UI", 20, "bold"),
                  bg=BG, fg=ACCENT).pack(anchor="w")
         tk.Label(container, text="Toxic Rain Pathfinder · Patch 3.30 · Manuelle Screenshots, keine Spielautomatisierung",
                  font=("Segoe UI", 10), bg=BG, fg=MUTED).pack(anchor="w", pady=(2, 14))

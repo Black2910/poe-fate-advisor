@@ -1,6 +1,23 @@
-# PoE Fate Advisor v1.3.2 – Loot-Buff-Varianten, RareShields und lernende Icon-Bibliothek
+# PoE Fate Advisor v1.3.3 – Loot-Buff-Varianten, RareShields und lernende Icon-Bibliothek
 
 Windows-Tool für **Path of Exile 1**, Liga 3.30, insbesondere den **Toxic Rain Pathfinder**. Alle Spielaktionen bleiben manuell: Der Advisor liest auf Tastendruck einen Screenshot, führt keine Spielklicks aus und greift nicht auf den PoE-Prozess zu.
+
+## Hotfix v1.3.3: Update von v1.3.1 ohne manuelle Installation
+
+Die Update-Prüfung von v1.3.1 blockierte v1.3.2 mit `Unbekannte Datei im Update: reward_variants.py`,
+weil neue Top-Level-Python-Dateien nicht auf der ursprünglichen Allowlist standen.
+V1.3.3 enthält weiterhin alle 151 Loot-Varianten und `RareShields`, bündelt die neuen Funktionen
+aber in der **bereits erlaubten `reward_catalog.py`**. Dadurch akzeptiert der alte v1.3.1-Updater
+auch dieses Release. Ein Umweg über v1.3.2 ist **nicht nötig**.
+
+Künftige neue Python-Module im Release-Root sind ab v1.3.3 erlaubt, jedoch weiterhin
+keine beliebigen Dateitypen, geschützten Verzeichnisse oder unsicheren ZIP-Pfade.
+Updates bleiben ausdrücklich bestätigungspflichtig, und persönliche Daten liegen außerhalb
+des Programmordners. Der rückwärtskompatible Update-Pfad wird automatisiert gegen die
+v1.3.1-Dateiliste geprüft; der tatsächliche Windows-Neustart muss auf Windows getestet werden.
+
+**Update-Anleitung:** Im derzeit installierten Advisor `Updates` → `Online nach Update suchen` →
+`v1.3.3` bestätigen. Wenn GitHub noch nicht die neue Version anbietet, später erneut prüfen.
 
 ## Einmalige Installation (empfohlen)
 

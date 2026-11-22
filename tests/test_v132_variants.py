@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 import tkinter as tk
 from PIL import Image
-from reward_variants import normalise_icon_id, variants_for, get_variant, match_tooltip, VARIANTS
+from reward_catalog import normalise_icon_id, variants_for, get_variant, match_tooltip, VARIANTS
 from icon_database import IconDatabase
 from app import AdvisorApp
 

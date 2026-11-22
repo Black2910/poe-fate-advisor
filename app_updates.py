@@ -17,13 +17,13 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 import zipfile
 
-VERSION = '1.3.2'
+VERSION = '1.3.3'
 DEFAULT_GITHUB_REPO = 'Black2910/poe-fate-advisor'
 MAX_DOWNLOAD = 20 * 1024 * 1024
 MAX_UNPACKED = 45 * 1024 * 1024
 REPOSITORY_PATTERN = re.compile(r'^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$')
 APP_FILES = {'app.py','app_updates.py','updater_worker.py','icon_database.py',
-             'icon_reference.py','fate_engine.py','reward_catalog.py','reward_variants.py',
+             'icon_reference.py','fate_engine.py','reward_catalog.py',
              'icon_ranking.py','image_regions.py','vision_sheet.py',
              'selection_validation.py','card_marker.py','overlay.py',
              'tray.py','requirements.txt','start_windows.bat',
@@ -72,7 +72,12 @@ def _safe_member(member: zipfile.ZipInfo, prefix: str) -> str:
         return ''
     if any(p in PROTECTED_SEGMENTS for p in parts):
         raise ValueError('Update darf keine geschützten Programm-/Nutzerdaten ändern.')
-    if parts[0] not in APP_FILES | {'assets','tests'}:
+    # Future releases may introduce new, root-level Python modules. A strict,
+    # permanently frozen filename list prevented the legitimate v1.3.2 update.
+    # Do not accept arbitrary other file types or nested modules; a ZIP is still
+    # treated as executable code and requires an explicit user confirmation.
+    new_python_module = len(parts)==1 and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*\.py', parts[0]) is not None
+    if parts[0] not in APP_FILES | {'assets','tests'} and not new_python_module:
         raise ValueError('Unbekannte Datei im Update: '+parts[0])
     if parts[0] in APP_FILES and len(parts)!=1:
         raise ValueError('Ungültige Unterordnerstruktur: '+parts[0])

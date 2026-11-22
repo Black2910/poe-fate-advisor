@@ -21,7 +21,7 @@ import threading
 from PIL import Image
 
 from reward_catalog import REWARD_ICONS
-from reward_variants import get_variant, normalise_icon_id
+from reward_catalog import get_variant, normalise_icon_id
 
 DATA_HOME = Path(os.environ.get('POE_FATE_DATA_DIR', Path.home() / '.poe_fate_advisor_data'))
 DB_PATH = DATA_HOME / 'reward_icons.sqlite3'
